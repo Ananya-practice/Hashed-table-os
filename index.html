@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hashed Page Table</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #000; /* Black Background */
+            color: #fff; /* White Text */
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            font-size: 2rem;
+            color: #d3d3d3; /* Pastel Gray */
+            text-shadow: 0 0 2px #d3d3d3, 0 0 3px #d3d3d3;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        h2 {
+            font-size: 1.5rem;
+            color: #d3d3d3; /* Pastel Gray */
+            text-shadow: 0 0 2px #d3d3d3, 0 0 3px #d3d3d3;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .form-section, .hash-table-section, .result-section {
+            flex: 1;
+            margin: 10px;
+            padding: 15px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #222; /* Dark Section Background */
+        }
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        label {
+            margin-right: 10px;
+            font-size: 1rem;
+            min-width: 100px;
+            text-align: right;
+        }
+        input {
+            background-color: #333; /* Dark Input Background */
+            color: #fff; /* White Text */
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 8px;
+            font-size: 1rem;
+        }
+        button {
+            background-color: #d3d3d3; /* Pastel Gray */
+            color: #000; /* Black Text */
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #bbb; /* Darker Gray */
+        }
+        .hash-table {
+            display: flex;
+            flex-direction: column;
+        }
+        .hash-entry {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .hash-index {
+            font-weight: bold;
+            width: 70px;
+            font-size: 1rem;
+            color: #d3d3d3; /* Pastel Gray */
+        }
+        .linked-list {
+            display: flex;
+            align-items: center;
+        }
+        .linked-node {
+            border: 1px solid #555;
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 5px;
+            background-color: #333; /* Dark Node Background */
+            color: #fff; /* White Text */
+            font-size: 0.9rem;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 15px;
+            border: 1px solid #555;
+            background-color: #333; /* Dark Result Background */
+            border-radius: 5px;
+            color: #fff; /* White Text */
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>HASHED TABLE EXAMPLE</h1>
+    <br><br>
+
+    <div class="container">
+        <div class="form-section">
+            <h2>Logical Address</h2>
+            <div class="form-row">
+                <label for="page-number">Page Number:</label>
+                <input type="number" id="page-number" placeholder="Enter Page Number">
+            </div>
+            <div class="form-row">
+                <label for="offset">Offset:</label>
+                <input type="number" id="offset" placeholder="Enter Offset">
+            </div>
+            <button onclick="getPhysicalAddress()">Get Physical Address</button>
+        </div>
+
+        <div class="hash-table-section">
+            <h2>Hash Table</h2>
+            <div class="hash-table" id="hash-table"></div>
+        </div>
+
+        <div class="result-section">
+            <h2>Physical Address</h2>
+            <div class="result" id="result">Physical Address will appear here.</div>
+        </div>
+    </div>
+
+    <script>
+        const HASH_SIZE = 5; // Only 5 hash entries (0 to 4)
+        const MAX_NODES = 3; // Limit of 3 nodes per linked list
+        const hashTable = Array.from({ length: HASH_SIZE }, (_, index) => {
+            const linkedList = [];
+            for (let i = 0; i < MAX_NODES; i++) {
+                const page = index + i * HASH_SIZE; // Pages based on modulus
+                const frame = page + 100; // Frame is page + 100
+                linkedList.push({ page, frame });
+            }
+            return linkedList;
+        });
+
+        // Render the hash table with linked lists
+        function renderHashTable() {
+            const tableDiv = document.getElementById('hash-table');
+            tableDiv.innerHTML = '';
+            hashTable.forEach((linkedList, index) => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'hash-entry';
+
+                // Hash index
+                const indexDiv = document.createElement('div');
+                indexDiv.className = 'hash-index';
+                indexDiv.textContent = `Hash ${index}`;
+                entryDiv.appendChild(indexDiv);
+
+                // Linked list visualization
+                const linkedListDiv = document.createElement('div');
+                linkedListDiv.className = 'linked-list';
+                linkedList.forEach(node => {
+                    const nodeDiv = document.createElement('div');
+                    nodeDiv.className = 'linked-node';
+                    nodeDiv.innerHTML = `<strong>Page:</strong> ${node.page}<br><strong>Frame:</strong> ${node.frame}`;
+                    linkedListDiv.appendChild(nodeDiv);
+                });
+                entryDiv.appendChild(linkedListDiv);
+
+                tableDiv.appendChild(entryDiv);
+            });
+        }
+
+        // Get the physical address for a page
+        function getPhysicalAddress() {
+            const pageNumber = parseInt(document.getElementById('page-number').value);
+            const offset = parseInt(document.getElementById('offset').value);
+
+            if (isNaN(pageNumber) || isNaN(offset)) {
+                alert("Please enter both page number and offset!");
+                return;
+            }
+
+            const hashIndex = pageNumber % HASH_SIZE;
+
+            // Search the linked list for the page number
+            const entry = hashTable[hashIndex].find(node => node.page === pageNumber);
+            const resultDiv = document.getElementById('result');
+
+            if (entry) {
+                const physicalAddress = entry.frame + offset; // Frame + Offset
+                resultDiv.innerHTML = `
+                    <strong>Frame Number:</strong> ${entry.frame}<br>
+                    <strong>Offset:</strong> ${offset}<br>
+                    <strong>Physical Address:</strong> ${physicalAddress}
+                `;
+            } else {
+                resultDiv.innerHTML = '<strong>Page not found in hash table.</strong>';
+            }
+        }
+
+        // Initial render
+        renderHashTable();
+    </script>
+</body>
+</html>
